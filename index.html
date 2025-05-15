@@ -33,7 +33,9 @@
       z-index: 9999;
     }
     #loadingScreen img {
-      width: 300px;
+      width: 100vw;
+      height: 100vh;
+      object-fit: cover;
     }
     #titleLogo {
       width: 300px;
@@ -47,7 +49,8 @@
       left: 0;
       width: 100vw;
       height: 100vh;
-      background: rgba(0, 0, 0, 0.95);
+      background: url('https://static.wixstatic.com/media/7f810a_22b3f3724d8d46c8813d9ea7deab7d96~mv2.jpg') no-repeat center center fixed;
+      background-size: cover;
       z-index: 9998;
       display: flex;
       align-items: center;
@@ -69,7 +72,7 @@
     #instructionContent h2 {
       font-size: 32px;
       margin-bottom: 20px;
-      color: #ffd700;
+      color: #ff3333;
     }
 
     #instructionContent p {
@@ -182,6 +185,7 @@
   
   <div id="instructionScreen">
     <div id="instructionContent">
+      <img src="https://static.wixstatic.com/media/7934ad_101cc4c6c9824f50951b87faceb6ecf8~mv2.png" alt="Steel & Nova Logo" style="width: 250px; margin-bottom: 20px;">
       <h2>How to Play</h2>
       <p>Tap or use arrow keys to hit the red targets as they appear.</p>
       <p>Each successful hit increases your score and builds your power bar.</p>
