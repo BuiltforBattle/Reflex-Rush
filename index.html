@@ -366,7 +366,7 @@
       document.getElementById('score').textContent = score;
       updatePowerBar();
       canPress = false;
-      if (score % 10 === 0 && baseInterval > 600) {
+      if (score % 20 === 0 && baseInterval > 600) {
         baseInterval -= 100;
         clearInterval(gameInterval);
         gameInterval = setInterval(showRandomIndicator, baseInterval);
@@ -380,7 +380,9 @@
         el.style.display = 'none';
         el.classList.remove('miss-effect');
       }, 300);
-      health--;
+      if (health > 0) {
+        health--;
+      }
       power = 0;
       document.getElementById('health').textContent = health;
       updatePowerBar();
