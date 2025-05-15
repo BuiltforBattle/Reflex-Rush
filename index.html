@@ -366,8 +366,8 @@
       document.getElementById('score').textContent = score;
       updatePowerBar();
       canPress = false;
-      if (score % 5 === 0 && baseInterval > 500) {
-        baseInterval -= 200;
+      if (score % 10 === 0 && baseInterval > 600) {
+        baseInterval -= 100;
         clearInterval(gameInterval);
         gameInterval = setInterval(showRandomIndicator, baseInterval);
       }
