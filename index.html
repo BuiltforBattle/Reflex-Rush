@@ -1,0 +1,318 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Steel & Nova: Reflex Rush</title>
+  <style>
+    body {
+      margin: 0;
+      background: url('https://static.wixstatic.com/media/7f810a_22b3f3724d8d46c8813d9ea7deab7d96~mv2.jpg') no-repeat center center fixed;
+      background-size: cover;
+      font-family: sans-serif;
+      color: #fff;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: flex-start;
+      min-height: 100vh;
+      overflow-y: auto;
+      padding-top: 20px;
+      text-align: center;
+    }
+    #loadingScreen {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100vw;
+      height: 100vh;
+      background: black;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      z-index: 9999;
+    }
+    #loadingScreen img {
+      width: 300px;
+    }
+    #titleLogo {
+      width: 300px;
+      max-width: 80%;
+      margin-bottom: 10px;
+    }
+    #gameArea {
+      position: relative;
+      width: 300px;
+      height: 300px;
+      background: rgba(34, 34, 34, 0.8);
+      border: 4px solid #444;
+      border-radius: 10px;
+      margin-bottom: 20px;
+      transition: box-shadow 0.3s ease;
+    }
+    #gameArea.rapid-fire {
+      box-shadow: 0 0 20px 5px yellow;
+    }
+    .indicator {
+      position: absolute;
+      width: 80px;
+      height: 80px;
+      background: red;
+      opacity: 0.8;
+      display: none;
+      animation: pulse 0.5s ease-in-out infinite alternate;
+    }
+    @keyframes pulse {
+      from { transform: scale(1); }
+      to { transform: scale(1.2); }
+    }
+    .hit-effect {
+      animation: hitFlash 0.3s ease-out forwards;
+    }
+    .miss-effect {
+      animation: missFlash 0.3s ease-out forwards;
+    }
+    @keyframes hitFlash {
+      0% { background-color: green; transform: scale(1); }
+      100% { background-color: green; transform: scale(1.4); opacity: 0; }
+    }
+    @keyframes missFlash {
+      0% { background-color: darkred; transform: scale(1); }
+      50% { transform: scale(1.1); }
+      100% { background-color: darkred; transform: scale(1); opacity: 0.3; }
+    }
+    #startBtn {
+      padding: 12px 24px;
+      font-size: 18px;
+      background: linear-gradient(to right, #990000, #660000);
+      border: none;
+      color: white;
+      border-radius: 10px;
+      cursor: pointer;
+      box-shadow: 0 0 10px rgba(0, 0, 0, 0.5);
+      transition: transform 0.2s ease;
+      margin-top: 10px;
+    }
+    #startBtn:hover {
+      transform: scale(1.05);
+    }
+    #countdown, #rapidFireCountdown {
+      font-size: 40px;
+      margin-top: 15px;
+      color: yellow;
+      font-weight: bold;
+    }
+    #powerBarContainer {
+      width: 300px;
+      height: 20px;
+      background: #333;
+      border: 2px solid #999;
+      border-radius: 10px;
+      margin-top: 10px;
+      overflow: hidden;
+      margin-left: auto;
+      margin-right: auto;
+    }
+    #powerBar {
+      height: 100%;
+      width: 0%;
+      background: linear-gradient(to right, orange, yellow);
+      transition: width 0.3s ease;
+    }
+  </style>
+</head>
+<body>
+  <div id="loadingScreen">
+    <img src="https://static.wixstatic.com/media/7f810a_88f8f26c730342dc947009d634aaa9d3~mv2.png" alt="Loading...">
+  </div>
+  <img id="titleLogo" src="https://static.wixstatic.com/media/7934ad_101cc4c6c9824f50951b87faceb6ecf8~mv2.png" alt="Steel & Nova Logo">
+  <h1>Reflex Rush</h1>
+  <div id="gameArea">
+    <div id="top" class="indicator" style="top: 10px; left: 110px;"></div>
+    <div id="bottom" class="indicator" style="bottom: 10px; left: 110px;"></div>
+    <div id="left" class="indicator" style="top: 110px; left: 10px;"></div>
+    <div id="right" class="indicator" style="top: 110px; right: 10px;"></div>
+  </div>
+  <div>
+    <h2>Score: <span id="score">0</span> | High Score: <span id="highScore">0</span></h2>
+    <h3>Health: <span id="health">3</span></h3>
+    <div id="powerBarContainer">
+      <div id="powerBar"></div>
+    </div>
+    <div id="countdown"></div>
+    <div id="rapidFireCountdown"></div>
+    <button id="startBtn" onclick="startCountdown()">Start Game</button>
+  </div>
+  <script>
+    const indicators = {
+      top: document.getElementById('top'),
+      bottom: document.getElementById('bottom'),
+      left: document.getElementById('left'),
+      right: document.getElementById('right')
+    };
+    let score = 0;
+    let highScore = 0;
+    let health = 3;
+    let power = 0;
+    let currentDirection = null;
+    let canPress = false;
+    let gameInterval;
+    let inRapidFire = false;
+    let rapidFireTimer;
+    let rapidFireCountdown;
+
+    window.addEventListener('load', () => {
+      setTimeout(() => {
+        document.getElementById('loadingScreen').style.display = 'none';
+      }, 2000);
+    });
+
+    function updatePowerBar() {
+      power = Math.min(power, 100);
+      document.getElementById('powerBar').style.width = power + '%';
+      if (power >= 100 && !inRapidFire) activateRapidFire();
+    }
+
+    function startCountdown() {
+      let countdown = 3;
+      document.getElementById('startBtn').style.display = 'none';
+      const countdownEl = document.getElementById('countdown');
+      countdownEl.textContent = countdown;
+      const timer = setInterval(() => {
+        countdown--;
+        if (countdown > 0) {
+          countdownEl.textContent = countdown;
+        } else {
+          clearInterval(timer);
+          countdownEl.textContent = '';
+          startGame();
+        }
+      }, 1000);
+    }
+
+    function startGame() {
+      score = 0;
+      health = 3;
+      power = 0;
+      inRapidFire = false;
+      document.getElementById('score').textContent = score;
+      document.getElementById('health').textContent = health;
+      document.getElementById('highScore').textContent = highScore;
+      updatePowerBar();
+      clearInterval(gameInterval);
+      gameInterval = setInterval(showRandomIndicator, 1600);
+    }
+
+    function showRandomIndicator() {
+      if (inRapidFire) return;
+      const keys = Object.keys(indicators);
+      currentDirection = keys[Math.floor(Math.random() * keys.length)];
+      const element = indicators[currentDirection];
+      element.style.display = 'block';
+      canPress = true;
+
+      setTimeout(() => {
+        if (!canPress) return;
+        miss();
+      }, 1000);
+    }
+
+    function activateRapidFire() {
+      inRapidFire = true;
+      clearInterval(gameInterval);
+      power = 0;
+      updatePowerBar();
+      document.getElementById('gameArea').classList.add('rapid-fire');
+      const countdownDisplay = document.getElementById('rapidFireCountdown');
+      let timeLeft = 3;
+      countdownDisplay.textContent = `RAPID FIRE: ${timeLeft}`;
+      rapidFireCountdown = setInterval(() => {
+        timeLeft--;
+        if (timeLeft > 0) {
+          countdownDisplay.textContent = `RAPID FIRE: ${timeLeft}`;
+        } else {
+          clearInterval(rapidFireCountdown);
+          countdownDisplay.textContent = '';
+        }
+      }, 1000);
+
+      Object.values(indicators).forEach(el => el.style.display = 'block');
+
+      rapidFireTimer = setTimeout(() => {
+        Object.values(indicators).forEach(el => el.style.display = 'none');
+        inRapidFire = false;
+        document.getElementById('gameArea').classList.remove('rapid-fire');
+        gameInterval = setInterval(showRandomIndicator, 1600);
+      }, 3000);
+    }
+
+    function handleInput(dir) {
+      if (!canPress && !inRapidFire) return;
+      if (inRapidFire) {
+        score++;
+        document.getElementById('score').textContent = score;
+        indicators[dir].style.display = 'none';
+        setTimeout(() => {
+          indicators[dir].style.display = 'block';
+        }, 400);
+        return;
+      }
+      if (dir === currentDirection) {
+        hit();
+      } else {
+        miss();
+      }
+    }
+
+    function hit() {
+      const el = indicators[currentDirection];
+      el.classList.add('hit-effect');
+      setTimeout(() => {
+        el.style.display = 'none';
+        el.classList.remove('hit-effect');
+      }, 300);
+      score++;
+      power += 10;
+      document.getElementById('score').textContent = score;
+      updatePowerBar();
+      canPress = false;
+    }
+
+    function miss() {
+      const el = indicators[currentDirection];
+      el.classList.add('miss-effect');
+      setTimeout(() => {
+        el.style.display = 'none';
+        el.classList.remove('miss-effect');
+      }, 300);
+      health--;
+      power = 0;
+      document.getElementById('health').textContent = health;
+      updatePowerBar();
+      canPress = false;
+      if (health <= 0) {
+        clearInterval(gameInterval);
+        clearTimeout(rapidFireTimer);
+        clearInterval(rapidFireCountdown);
+        if (score > highScore) highScore = score;
+        alert('Game Over! Final Score: ' + score);
+        document.getElementById('startBtn').style.display = 'inline-block';
+      }
+    }
+
+    window.addEventListener('keydown', e => {
+      const keyMap = {
+        ArrowUp: 'top',
+        ArrowDown: 'bottom',
+        ArrowLeft: 'left',
+        ArrowRight: 'right'
+      };
+      if (keyMap[e.key]) handleInput(keyMap[e.key]);
+    });
+
+    Object.keys(indicators).forEach(dir => {
+      indicators[dir].addEventListener('click', () => handleInput(dir));
+    });
+  </script>
+</body>
+</html>
