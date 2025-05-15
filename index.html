@@ -243,6 +243,7 @@
     let inRapidFire = false;
     let rapidFireTimer;
     let rapidFireCountdown;
+    let baseInterval = 1600;
 
     window.addEventListener('load', () => {
       setTimeout(() => {
@@ -289,7 +290,7 @@
       document.getElementById('highScore').textContent = highScore;
       updatePowerBar();
       clearInterval(gameInterval);
-      gameInterval = setInterval(showRandomIndicator, 1600);
+      gameInterval = setInterval(showRandomIndicator, baseInterval);
     }
 
     function showRandomIndicator() {
@@ -365,6 +366,11 @@
       document.getElementById('score').textContent = score;
       updatePowerBar();
       canPress = false;
+      if (score % 5 === 0 && baseInterval > 600) {
+        baseInterval -= 100;
+        clearInterval(gameInterval);
+        gameInterval = setInterval(showRandomIndicator, baseInterval);
+      }
     }
 
     function miss() {
