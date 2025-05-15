@@ -331,8 +331,10 @@
       rapidFireTimer = setTimeout(() => {
         Object.values(indicators).forEach(el => el.style.display = 'none');
         inRapidFire = false;
+        currentDirection = null;
+        canPress = false;
         document.getElementById('gameArea').classList.remove('rapid-fire');
-        gameInterval = setInterval(showRandomIndicator, 1600);
+        gameInterval = setInterval(showRandomIndicator, baseInterval);
       }, 3000);
     }
 
